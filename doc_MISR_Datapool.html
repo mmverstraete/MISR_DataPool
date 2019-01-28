@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+   <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <title>Documentation for the IDL routines in project MISR_Datapool</title>
+   </head>
+<body>
+<h1>Documentation for the IDL routines in project MISR_Datapool</h1>
+<h2>mk_ftp_datapool_misr</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function creates the plain text file containing the collection of <code>ftp</code> commands required by the <code>Perl</code> script <code>get_misr_datapool.pl</code> to download <span class="smallcaps">MISR</span> data files for the specified <span class="smallcaps">Path</span> from the NASA Langley Atmospheric Sciences Data Center (ASDC).</p></li>
+<li><p><strong>Algorithm:</strong> This function generates a file containing a set of <code>ftp</code> commands to retrieve <span class="smallcaps">MISR</span> data product files on the basis of the values of input positional and keyword parameters.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = mk_ftp_datapool_misr(misr_path, $</code><br />
+<code>START_TIME = start_time, END_TIME = end_time, $</code><br />
+<code>DATA_TYPES = data_types, FTPSCRIPT_PATH = ftpscript_path, $</code><br />
+<code>LOG_PATH = log_path, DATA_PATH = data_path, VERBOSE = verbose, $</code><br />
+<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>START_TIME = start_time {STRING} [I] (Default value:</code><br />
+<code>&#8217;2000-02-24T00:00:00Z&#8217;):</code> The starting date and time of the period during which to acquire <span class="smallcaps">MISR</span> data files.</p></li>
+<li><p><code>END_TIME = end_time {STRING} [I] (Default value: Today):</code> The ending date and time of the period during which to acquire <span class="smallcaps">MISR</span> data files.</p></li>
+<li><p><code>DATA_TYPES = data_types {STRING array} [I] (Default value: [&#8221;]):</code> The array containing the list of <span class="smallcaps">MISR</span> data types to retrieve. Possibilities include:</p>
+<ul>
+<li><p><span class="smallcaps">BR</span>: <span class="smallcaps">L1B2</span> Browse Product.</p></li>
+<li><p><span class="smallcaps">GRP_GM</span>: <span class="smallcaps">L1B2</span> Georectified Radiance Product (GRP) Terrain projected Global Mode (GM)</p></li>
+<li><p><span class="smallcaps">GRP_LM</span>: <span class="smallcaps">L1B2</span> Georectified Radiance Product (GRP) Terrain projected Local Mode (LM)</p></li>
+<li><p><span class="smallcaps">GPP</span>: <span class="smallcaps">L1B2</span> Geometric Parameters Product (GPP).</p></li>
+<li><p><span class="smallcaps">RCCM</span>: <span class="smallcaps">L1B2</span> Georectified Radiance Product (GRP) Radiometric Camera-by-camera Cloud Mask (RCCM)</p></li>
+<li><p><span class="smallcaps">AERO</span>: <span class="smallcaps">L2</span> Aerosol/Surface (AS) Aerosol Product (AP).</p></li>
+<li><p><span class="smallcaps">LAND</span>: <span class="smallcaps">L2</span> Aerosol/Surface (AS) Land Surface Product (LSP).</p></li>
+<li><p><span class="smallcaps">ONLY</span>: Only those files strictly needed by <span class="smallcaps">MISR-HR</span>: <span class="smallcaps">GRP_GM</span>, <span class="smallcaps">GPP</span>, <span class="smallcaps">RCCM</span>, <span class="smallcaps">LAND</span>.</p></li>
+<li><p><span class="smallcaps">ALL</span>: All of the above.</p></li>
+</ul></li>
+<li><p><code>FTPSCRIPT_PATH = ftpscript_path {STRING} [I] (Default value: &#8217;\sim/MISR_HR/Input/Datapool/&#8217;):</code> The name of the folder containing the <code>ftp</code> script.</p></li>
+<li><p><code>LOG_PATH = log_path {STRING} [I] (Default value: &#8217;\sim/MISR_HR/Input/Datapool/&#8217;):</code> The name of the folder containing the <code>Log</code> file.</p></li>
+<li><p><code>DATA_PATH = data_path {STRING} [I] (Default value: &#8217;\sim/MISR_HR/Input/MISR/&#8217; + misr_path_str&#8217;):</code> The name of the folder where the <span class="smallcaps">MISR</span> files should be saved.</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) saving a log file.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The <code>ftp</code> script file and the optional <code>Log</code> files are saved in the designated or default folders.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The <code>ftp</code> script file and the optional <code>Log</code> files may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 98: An exception condition occurred in <code>get_host_info.pro</code>.</p></li>
+<li><p>Error 99: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 120: The initial date of the period of interest, provided with the input keyword parameter <code>START_TIME = start_time</code> is invalid.</p></li>
+<li><p>Error 130: The final date of the period of interest, provided with the input keyword parameter <code>END_TIME = end_time</code> is invalid.</p></li>
+<li><p>Error 140: The list <code>data_types</code> of <span class="smallcaps">MISR</span> product types to be acquired must be of type <code>STRING</code>.</p></li>
+<li><p>Error 150: The list <code>data_types</code> of <span class="smallcaps">MISR</span> product types to be acquired must be an array.</p></li>
+<li><p>Error 160: The list <code>data_types</code> of <span class="smallcaps">MISR</span> product types to be acquired contains one or more unrecognized products.</p></li>
+<li><p>Error 200: An exception condition occurred in <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in <code>orbit2str.pro</code> while generating the first <span class="smallcaps">Orbit</span> to get.</p></li>
+<li><p>Error 220: An exception condition occurred in <code>orbit2str.pro</code> while generating the last <span class="smallcaps">Orbit</span> to get.</p></li>
+<li><p>Error 500: The output folder that should contain the <code>ftp</code> script generated by this function exists but is unwritable.</p></li>
+<li><p>Error 510: An exception condition occurred in <code>is_writable.pro</code>.</p></li>
+<li><p>Error 520: The output folder that should contain the <code>Log</code> file generated by this function exists but is unwritable.</p></li>
+<li><p>Error 530: An exception condition occurred in <code>is_writable.pro</code>.</p></li>
+<li><p>Error 540: The output folder that should contain the <span class="smallcaps">MISR</span> files retrieved by the associated <code>Perl</code> script exists but is unwritable.</p></li>
+<li><p>Error 550: An exception condition occurred in <code>is_writable.pro</code>.</p></li>
+<li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_PATH_TIMERANGE_TO_ORBITLIST</code>.</p></li>
+<li><p>Error 610: the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_PATH_TIMERANGE_TO_ORBITLIST</code> returned an empty <span class="smallcaps">Orbit</span> list.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>MISR Toolkit</code></p></li>
+<li><p><code>chk_isodate.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>force_path_sep.pro</code></p></li>
+<li><p><code>get_host_info.pro</code></p></li>
+<li><p><code>is_array.pro</code></p></li>
+<li><p><code>is_string.pro</code></p></li>
+<li><p><code>is_writable.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+<li><p><code>today.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> The directories and file names to access <span class="smallcaps">MISR</span> data products at Langley are set by NASA and are therefore hardcoded in this function to match the organization of the datapool at the time of writing.</p></li>
+<li><p><strong>Note 2:</strong> The data product version identifiers and directory addresses on the NASA ASDC Data Pool <code>ftp</code> site are hardwired near the start of this routine: they should be updated manually whenever new versions become available.</p></li>
+<li><p><strong>Note 3:</strong>The default directory address of the local folder to store the <code>ftp</code> script and the <code>Log</code> file is <code>home + &#8217;MISR_HR/Input/Datapool/&#8217;</code>, where <code>home</code> is the user&#8217;s home directory on the current computer.</p></li>
+<li><p><strong>Note 4:</strong> These default directories can be overridden by setting the optional input keyword parameters <code>FTPSCRIPT_PATH</code> and <code>LOG_PATH</code> to alternate addresses, respectively.</p></li>
+<li><p><strong>Note 5:</strong> The <code>ftp</code> script file is named<br />
+<code>&#8217;FTPscript_datapool_MISR_&#8217; + $</code><br />
+<code>misr_path_str + &#8217;_&#8217; + $</code><br />
+<code>frst_orbit_str + &#8217;-&#8217; + $</code><br />
+<code>last_orbit_str + &#8217;_&#8217; + $</code><br />
+<code>date + &#8217;.txt&#8217;</code>.</p></li>
+<li><p><strong>Note 6:</strong> The optional <code>Log</code> file is named<br />
+<code>&#8217;Log_datapool_MISR_&#8217; + $</code><br />
+<code>misr_path_str + &#8217;_&#8217; + $</code><br />
+<code>frst_orbit_str + &#8217;-&#8217; + $</code><br />
+<code>last_orbit_str + &#8217;_&#8217; + $</code><br />
+<code>date + &#8217;.txt&#8217;</code>.</p></li>
+<li><p><strong>Note 7:</strong> The default directory address of the local folder to store the <span class="smallcaps">MISR</span> data product files is<br />
+<code>home + &#8217;MISR_HR/Input/MISR/&#8217; + misr_path_str + PATH_SEP()</code>, where <code>home</code> is the user&#8217;s home directory on the current computer.</p></li>
+<li><p><strong>Note 8:</strong> This default directory address can be overridden by setting the optional input keyword parameter <code>DATA_PATH</code> to an alternate address.</p></li>
+<li><p><strong>Note 9:</strong> All <span class="smallcaps">MISR</span> data files are initially saved in the same folder to let the <code>ftp</code> process proceed uninterrupted. They may need to be moved to their final destination at a later stage.</p></li>
+<li><p><strong>Note 10:</strong> The <span class="smallcaps">MISR</span> data product files are saved locally with the same original name they hold at NASA Langley.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; misr_path = 168
+IDL&gt; rc = mk_ftp_datapool_misr(misr_path, /VERBOSE, $
+   /DEBUG, EXCPT_COND = excpt_cond)
+
+[This setup will result in the saving of an FTP script and a Log
+file in the default directories mentioned above. WARNING: This
+particular FTP script will acquire some 86,000 files from ASDC,
+which might take a long time as well as take up a large disk
+space locally.]</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2016&#8211;03&#8211;13: Version 0.9 &#8212; Initial release by Linda Hunt, as <code>ftp_pool.pro</code>.</p></li>
+<li><p>2017&#8211;11&#8211;22: Version 1.0 &#8212; Updat the function, renamed <code>get_misr_datapool.pro</code> and made available only at GCI/Wits.</p></li>
+<li><p>2018&#8211;12&#8211;12: Version 1.1 &#8212; Revamp the function to include a full set of input positional and keyword parameters, renamed <code>mk_ftp_datapool_misr.pro</code>.</p></li>
+<li><p>2019&#8211;01&#8211;06: Version 1.2 &#8212; Simplify the calling sequence and hardcode version identifiers to retrieve the most current version at the time of writing.</p></li>
+<li><p>2019&#8211;01&#8211;28: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+</ul></li>
+</ul>
+<h2>order_misr</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This program collects user inputs to specify which <span class="smallcaps">MISR</span> data product files must be downloaded from the NASA ASDC Data Pool. Default or common values are provided for all required inputs except the <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, which must be entered explicitly.</p></li>
+<li><p><strong>Algorithm:</strong> This main program is a wrapper routine to assess which <span class="smallcaps">MISR</span> data product files should be downloaded from the NASA ASDC Data Pool. Once the inputs have been obtained and verified, this program relies on the function <code>mk_ftp_datapool_misr.pro</code> to generate the <code>ftp</code> script itself. The <code>Perl</code> script <code>get_datapool_misr.pl</code> is subsequently used to manage the <code>ftp</code> connection with the NASA ASDC Data Pool and execute each <code>ftp</code> command in turn.</p></li>
+<li><p><strong>Syntax:</strong> <code>order_misr</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong> None.</p></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong> None.</p></li>
+<li><p><strong>Returned value type:</strong> N/A.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, an <code>ftp</code> script file is saved in the designated or default folder <code>ftpscript_path</code>, an optional log file is saved in the designated or default folder <code>log_path</code>, and the <span class="smallcaps">MISR</span> data product files retrieved by the <code>Perl</code> script are expected to be saved in the designated or default folder <code>data_path</code>.</p></li>
+<li><p>If an exception condition has been detected, a message about the exception condition encountered is printed on the console. The <code>ftp</code> script file and the log files may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 500: The output folder <code>ftpscript_path</code> is unwritable.</p></li>
+<li><p>Error 510: An exception condition occurred in <code>is_writable.pro</code>.</p></li>
+<li><p>Error 520: The output folder <code>log_path</code> is unwritable.</p></li>
+<li><p>Error 530: An exception condition occurred in <code>is_writable.pro</code>.</p></li>
+<li><p>Error 540: The output folder <code>data_path</code> is unwritable.</p></li>
+<li><p>Error 550: An exception condition occurred in <code>is_writable.pro</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>chk_ymddate.pro</code></p></li>
+<li><p><code>is_writable.pro</code></p></li>
+<li><p><code>mk_ftp_datapool_misr.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>set_white.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+<li><p><code>today.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong> None.</p></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; order_misr
+
+[Answer the various questions; when all inputs have been
+provided and verified, the ftp script and the optional
+log file are saved in the specified or default folders.]</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2019&#8211;01&#8211;07: Version 0.9 &#8212; Initial release.</p></li>
+<li><p>2019&#8211;01&#8211;10: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;01&#8211;28: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+</ul></li>
+</ul>
+</body>
+</html>
