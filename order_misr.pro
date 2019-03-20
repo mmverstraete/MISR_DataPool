@@ -90,6 +90,10 @@ PRO order_misr
    ;
    ;  *   2019–01–28: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
+   ;
+   ;  *   2019–03–20: Version 2.01 — Bug fix: Correct the handling of
+   ;      initial and final dates other than the defaults [Thanks to Hugo
+   ;      De Lemos].
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -162,28 +166,26 @@ PRO order_misr
          PROMPT = 'Enter the starting date (YYYY-MM-DD; default: 2000-02-24): '
       answ = strstr(answ)
       IF (answ EQ '') THEN BEGIN
+         strt = JULDAY(2, 24, 2000)
          start_time = '2000-02-24'
       ENDIF ELSE BEGIN
-         start_time = answ
-         rc = chk_ymddate(start_time, year, month, day, $
+         rc = chk_ymddate(answ, year, month, day, $
             DEBUG = debug, EXCPT_COND = excpt_cond)
          IF (rc NE 0) THEN BEGIN
-            PRINT, '   Invalid starting date format.'
+            PRINT, '   Invalid starting date format: Try again.'
+            start_time = ''
          ENDIF ELSE BEGIN
-            strt = JULDAY(2, 24, 2000)
-            init = JULDAY(month, day, year)
+            strt = MAX([JULDAY(2, 24, 2000), JULDAY(month, day, year)])
             tody = today(FMT = 'jul')
-            IF (init LT strt) THEN BEGIN
-               PRINT, '   Starting date reset to the start of the MISR mission.'
-               start_time = '2000-02-24'
-            ENDIF
-            IF (init GE tody) THEN BEGIN
-               PRINT, '   Starting date must be before today.'
-               start_time = ''
-            ENDIF
+            strt = MIN(strt, tody)
+            CALDAT, strt, mo, dy, yr
+            start_time = strstr(yr) + '-' + $
+               STRING(mo, FORMAT = '(I02)') + '-' + $
+               STRING(dy, FORMAT = '(I02)')
          ENDELSE
       ENDELSE
    ENDWHILE
+   PRINT, '   The starting date is set to ' + start_time + '.'
    start_time = start_time + 'T00:00:00Z'
 
    ;  Get the final date:
@@ -194,29 +196,30 @@ PRO order_misr
          PROMPT = 'Enter the ending date (YYYY-MM-DD; default: today): '
       answ = strstr(answ)
       IF (answ EQ '') THEN BEGIN
-         end_time = today(FMT = 'ymd')
+         endd = today(FMT = 'ymd')
+         CALDAT, endd, mo, dy, yr
+         end_time = strstr(yr) + '-' + strstr(mo) + '-' + strstr(dy)
       ENDIF ELSE BEGIN
-         end_time = answ
-         rc = chk_ymddate(end_time, year, month, day, $
+         rc = chk_ymddate(answ, year, month, day, $
             DEBUG = debug, EXCPT_COND = excpt_cond)
          IF (rc NE 0) THEN BEGIN
-            PRINT, '   Invalid ending date format.'
+            PRINT, '   Invalid ending date format: Try again.'
+            end_time = ''
          ENDIF ELSE BEGIN
-            strt = JULDAY(2, 24, 2000)
-            endd = JULDAY(month, day, year)
             tody = today(FMT = 'jul')
-            IF (endd LT init) THEN BEGIN
-               PRINT, '   Ending date must be after starting date.'
+            endd = MIN([JULDAY(month, day, year), tody])
+            IF (endd LT strt) THEN BEGIN
+               PRINT, '   Ending date must be after starting date: Try again.'
                end_time = ''
             ENDIF
-            IF (endd GT tody) THEN BEGIN
-               tody = today(FMT = 'ymd')
-               end_time = tody
-               PRINT, '   Ending date reset to today.'
-            ENDIF
+            CALDAT, endd, mo, dy, yr
+            end_time = strstr(yr) + '-' + $
+               STRING(mo, FORMAT = '(I02)') + '-' + $
+               STRING(dy, FORMAT = '(I02)')
          ENDELSE
       ENDELSE
    ENDWHILE
+   PRINT, '   The ending date is set to ' + end_time + '.'
    end_time = end_time + 'T23:59:59Z'
 
    ;  Get the list of MISR data products to download:
