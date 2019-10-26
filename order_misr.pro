@@ -38,17 +38,11 @@ PRO order_misr
    ;
    ;  EXCEPTION CONDITIONS:
    ;
-   ;  *   Error 500: The output folder ftpscript_path is unwritable.
+   ;  Error 400: The output folder ftpscript_path is unwritable.
    ;
-   ;  *   Error 510: An exception condition occurred in is_writable.pro.
+   ;  Error 410: The output folder log_path is unwritable.
    ;
-   ;  *   Error 520: The output folder log_path is unwritable.
-   ;
-   ;  *   Error 530: An exception condition occurred in is_writable.pro.
-   ;
-   ;  *   Error 540: The output folder data_path is unwritable.
-   ;
-   ;  *   Error 550: An exception condition occurred in is_writable.pro.
+   ;  Error 420: The output folder data_path is unwritable.
    ;
    ;  DEPENDENCIES:
    ;
@@ -56,7 +50,7 @@ PRO order_misr
    ;
    ;  *   chk_ymddate.pro
    ;
-   ;  *   is_writable.pro
+   ;  *   is_writable_dir.pro
    ;
    ;  *   mk_ftp_datapool_misr.pro
    ;
@@ -94,6 +88,11 @@ PRO order_misr
    ;  *   2019–03–20: Version 2.01 — Bug fix: Correct the handling of
    ;      initial and final dates other than the defaults [Thanks to Hugo
    ;      De Lemos].
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -162,6 +161,7 @@ PRO order_misr
    start_time = ''
    answ = ''
    WHILE (start_time EQ '') DO BEGIN
+      PRINT
       READ, answ, $
          PROMPT = 'Enter the starting date (YYYY-MM-DD; default: 2000-02-24): '
       answ = strstr(answ)
@@ -192,13 +192,12 @@ PRO order_misr
    end_time = ''
    answ = ''
    WHILE (end_time EQ '') DO BEGIN
+      PRINT
       READ, answ, $
          PROMPT = 'Enter the ending date (YYYY-MM-DD; default: today): '
       answ = strstr(answ)
       IF (answ EQ '') THEN BEGIN
-         endd = today(FMT = 'ymd')
-         CALDAT, endd, mo, dy, yr
-         end_time = strstr(yr) + '-' + strstr(mo) + '-' + strstr(dy)
+         end_time = today(FMT = 'ymd')
       ENDIF ELSE BEGIN
          rc = chk_ymddate(answ, year, month, day, $
             DEBUG = debug, EXCPT_COND = excpt_cond)
@@ -229,6 +228,7 @@ PRO order_misr
    dt_only = ['GRP_GM', 'GPP', 'RCCM', 'LAND']
    n_prods = 0
    WHILE (n_prods EQ 0) DO BEGIN
+      PRINT
       PRINT, 'List of individual MISR data product(s) that can be ' + $
          'downloaded with this program:'
       PRINT, '   BR: L1B2 Browse Product.'
@@ -332,6 +332,7 @@ PRO order_misr
    ;  Get the directory address of the folder to contain the ftp script:
    ftpscript_path = ''
    WHILE (ftpscript_path EQ '') DO BEGIN
+      PRINT
       PRINT, 'Enter the directory where the ftp script should be saved'
       READ, ftpscript_path, PROMPT = '(default: set by set_roots_vers.pro): '
       ftpscript_path = strstr(ftpscript_path, $
@@ -341,41 +342,20 @@ PRO order_misr
             misr_path_str + PATH_SEP()
       ENDIF
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'ftpscript_path' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(ftpscript_path, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-            error_code = 500
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output folder ' + ftpscript_path + $
-               ' is unwritable.'
-            PRINT, excpt_cond
-            RETURN
-         END
-         -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 510
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               PRINT, excpt_cond
-               RETURN
-            ENDIF
-         END
-         -2: BEGIN
-            FILE_MKDIR, ftpscript_path
-         END
-         ELSE: BEGIN
-            ftpscript_path = ''
-         END
-      ENDCASE
+   ;  Create the output directory 'ftpscript_path' if it does not exist:
+      res = is_writable_dir(ftpscript_path, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 400
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The directory ftpscript_path is unwritable.'
+         RETURN, error_code
+      ENDIF
    ENDWHILE
 
    ;  Get the directory address of the folder to contain the log file:
    log_path = ''
    WHILE (log_path EQ '') DO BEGIN
+      PRINT
       PRINT, 'Enter the directory where the log file should be saved'
       READ, log_path, PROMPT = '(default: set by set_roots_vers.pro): '
       log_path = strstr(log_path)
@@ -384,41 +364,20 @@ PRO order_misr
             misr_path_str + PATH_SEP()
       ENDIF
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'log_path' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(log_path, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-            error_code = 520
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output folder ' + log_path + $
-               ' is unwritable.'
-            PRINT, excpt_cond
-            RETURN
-         END
-         -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 530
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               PRINT, excpt_cond
-               RETURN
-            ENDIF
-         END
-         -2: BEGIN
-            FILE_MKDIR, log_path
-         END
-         ELSE: BEGIN
-            ftpscript_path = ''
-         END
-      ENDCASE
+   ;  Create the output directory 'log_path' if it does not exist:
+      res = is_writable_dir(log_path, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 410
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The directory log_path is unwritable.'
+         RETURN, error_code
+      ENDIF
    ENDWHILE
 
    ;  Get the directory address where the MISR data products should be saved:
    data_path = ''
    WHILE (data_path EQ '') DO BEGIN
+      PRINT
       PRINT, 'Enter the directory where the MISR data products should be saved'
       READ, data_path, PROMPT = '(default: set by set_roots_vers.pro): '
       data_path = strstr(data_path)
@@ -427,36 +386,14 @@ PRO order_misr
             misr_path_str + PATH_SEP()
       ENDIF
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'data_path' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(data_path, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-            error_code = 540
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output folder ' + data_path + $
-               ' is unwritable.'
-            PRINT, excpt_cond
-            RETURN
-         END
-         -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 550
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               PRINT, excpt_cond
-               RETURN
-            ENDIF
-         END
-         -2: BEGIN
-            FILE_MKDIR, data_path
-         END
-         ELSE: BEGIN
-            ftpscript_path = ''
-         END
-      ENDCASE
+   ;  Create the output directory 'data_path' if it does not exist:
+      res = is_writable(data_path, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 420
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The directory data_path is unwritable.'
+         RETURN, error_code
+      ENDIF
    ENDWHILE
 
    verbose = 1
@@ -508,6 +445,8 @@ PRO order_misr
       LOG_PATH = log_path, DATA_PATH = data_path, VERBOSE = verbose, $
       DEBUG = debug, EXCPT_COND = excpt_cond)
 
-   PRINT, 'Processing completed.'
+   PRINT, 'Processing completed:'
+   PRINT, 'The FTP script is saved in ' + ftpscript_path + '.'
+   PRINT, 'The log file is saved in ' + log_path + '.'
 
 END
